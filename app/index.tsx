@@ -45,6 +45,10 @@ export default function Dashboard() {
     ? mockGoals.reduce((sum, goal) => sum + (goal.currentValue / goal.targetValue), 0) / mockGoals.length 
     : 0;
 
+  const formatCurrency = (amount: number) => {
+    return `R$ ${amount.toFixed(2).replace('.', ',')}`;
+  };
+
   return (
     <SafeAreaView style={commonStyles.safeArea}>
       <View style={commonStyles.header}>
@@ -91,11 +95,147 @@ export default function Dashboard() {
           />
           <DashboardCard
             title="Saldo Atual"
-            value={`R$ ${balance.toFixed(2)}`}
+            value={formatCurrency(balance)}
             icon="card-outline"
             color={balance >= 0 ? colors.success : colors.error}
             onPress={() => router.push('/finances')}
           />
+        </View>
+
+        {/* Financial Summary */}
+        <View style={commonStyles.card}>
+          <View style={commonStyles.spaceBetween}>
+            <Text style={commonStyles.subtitle}>Resumo Financeiro</Text>
+            <TouchableOpacity onPress={() => router.push('/finances')}>
+              <Text style={[commonStyles.textSecondary, { color: colors.primary }]}>
+                Ver detalhes
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.financialSummary}>
+            <View style={styles.financialItem}>
+              <View style={[styles.financialIcon, { backgroundColor: colors.success + '20' }]}>
+                <Icon name="arrow-down" size={20} color={colors.success} />
+              </View>
+              <View style={styles.financialInfo}>
+                <Text style={commonStyles.textSecondary}>Receitas</Text>
+                <Text style={[commonStyles.text, { fontWeight: '700', color: colors.success }]}>
+                  {formatCurrency(totalIncome)}
+                </Text>
+              </View>
+            </View>
+            
+            <View style={styles.financialItem}>
+              <View style={[styles.financialIcon, { backgroundColor: colors.error + '20' }]}>
+                <Icon name="arrow-up" size={20} color={colors.error} />
+              </View>
+              <View style={styles.financialInfo}>
+                <Text style={commonStyles.textSecondary}>Gastos</Text>
+                <Text style={[commonStyles.text, { fontWeight: '700', color: colors.error }]}>
+                  {formatCurrency(totalExpenses)}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Recent Transactions */}
+          <View style={styles.recentTransactions}>
+            <Text style={[commonStyles.text, { fontWeight: '600', marginBottom: 12 }]}>
+              Transações Recentes
+            </Text>
+            {mockExpenses
+              .sort((a, b) => b.date.getTime() - a.date.getTime())
+              .slice(0, 3)
+              .map((expense) => (
+                <View key={expense.id} style={styles.transactionItem}>
+                  <View style={[
+                    styles.transactionIcon,
+                    { backgroundColor: expense.type === 'income' ? colors.success + '20' : colors.error + '20' }
+                  ]}>
+                    <Icon 
+                      name={expense.type === 'income' ? 'add' : 'remove'} 
+                      size={16} 
+                      color={expense.type === 'income' ? colors.success : colors.error} 
+                    />
+                  </View>
+                  <View style={styles.transactionInfo}>
+                    <Text style={[commonStyles.text, { fontWeight: '500' }]}>
+                      {expense.description}
+                    </Text>
+                    <Text style={commonStyles.textSecondary}>
+                      {expense.category}
+                    </Text>
+                  </View>
+                  <Text style={[
+                    commonStyles.text,
+                    { 
+                      fontWeight: '600',
+                      color: expense.type === 'income' ? colors.success : colors.error
+                    }
+                  ]}>
+                    {expense.type === 'income' ? '+' : '-'}{formatCurrency(expense.amount)}
+                  </Text>
+                </View>
+              ))}
+          </View>
+        </View>
+
+        {/* Agenda Summary */}
+        <View style={commonStyles.card}>
+          <View style={commonStyles.spaceBetween}>
+            <Text style={commonStyles.subtitle}>Próximos Compromissos</Text>
+            <TouchableOpacity onPress={() => router.push('/agenda')}>
+              <Text style={[commonStyles.textSecondary, { color: colors.primary }]}>
+                Ver agenda
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {upcomingAppointments.length > 0 ? (
+            <View style={styles.agendaSummary}>
+              {upcomingAppointments.map((appointment) => (
+                <TouchableOpacity
+                  key={appointment.id}
+                  style={styles.appointmentSummaryItem}
+                  onPress={() => router.push('/agenda')}
+                >
+                  <View style={styles.appointmentDate}>
+                    <Text style={styles.dateDay}>
+                      {appointment.date.getDate()}
+                    </Text>
+                    <Text style={styles.dateMonth}>
+                      {appointment.date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.appointmentDetails}>
+                    <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+                      {appointment.title}
+                    </Text>
+                    <Text style={commonStyles.textSecondary}>
+                      {appointment.date.toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })} • {appointment.duration}min
+                    </Text>
+                    {appointment.location && (
+                      <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
+                        📍 {appointment.location}
+                      </Text>
+                    )}
+                  </View>
+                  <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyAgenda}>
+              <Icon name="calendar-outline" size={32} color={colors.textSecondary} />
+              <Text style={[commonStyles.textSecondary, { marginTop: 8 }]}>
+                Nenhum compromisso próximo
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Today's Appointments */}
@@ -166,54 +306,6 @@ export default function Dashboard() {
             </View>
           </View>
         </View>
-
-        {/* Upcoming Appointments */}
-        {upcomingAppointments.length > 0 && (
-          <View style={commonStyles.card}>
-            <View style={commonStyles.spaceBetween}>
-              <Text style={commonStyles.subtitle}>Próximos Compromissos</Text>
-              <TouchableOpacity onPress={() => router.push('/agenda')}>
-                <Text style={[commonStyles.textSecondary, { color: colors.primary }]}>
-                  Ver agenda
-                </Text>
-              </TouchableOpacity>
-            </View>
-            
-            {upcomingAppointments.map((appointment) => (
-              <TouchableOpacity
-                key={appointment.id}
-                style={styles.upcomingAppointment}
-                onPress={() => router.push('/agenda')}
-              >
-                <View style={styles.appointmentDate}>
-                  <Text style={styles.dateDay}>
-                    {appointment.date.getDate()}
-                  </Text>
-                  <Text style={styles.dateMonth}>
-                    {appointment.date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.appointmentDetails}>
-                  <Text style={[commonStyles.text, { fontWeight: '600' }]}>
-                    {appointment.title}
-                  </Text>
-                  <Text style={commonStyles.textSecondary}>
-                    {appointment.date.toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })} • {appointment.duration}min
-                  </Text>
-                  {appointment.location && (
-                    <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
-                      📍 {appointment.location}
-                    </Text>
-                  )}
-                </View>
-                <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         {/* Recent Tasks */}
         <View style={commonStyles.card}>
@@ -400,6 +492,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
   },
+  financialSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  financialItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  financialIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  financialInfo: {
+    flex: 1,
+  },
+  recentTransactions: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 16,
+  },
+  transactionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  transactionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  transactionInfo: {
+    flex: 1,
+  },
+  agendaSummary: {
+    marginTop: 16,
+  },
+  appointmentSummaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  appointmentDate: {
+    alignItems: 'center',
+    marginRight: 16,
+    minWidth: 50,
+  },
+  dateDay: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  dateMonth: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  appointmentDetails: {
+    flex: 1,
+  },
+  emptyAgenda: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -429,31 +596,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   appointmentInfo: {
-    flex: 1,
-  },
-  upcomingAppointment: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  appointmentDate: {
-    alignItems: 'center',
-    marginRight: 16,
-    minWidth: 50,
-  },
-  dateDay: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  dateMonth: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  appointmentDetails: {
     flex: 1,
   },
   taskItem: {
