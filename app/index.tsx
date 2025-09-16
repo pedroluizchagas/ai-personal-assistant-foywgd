@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '../styles/commonStyles';
@@ -8,10 +8,12 @@ import BottomTabBar from '../components/BottomTabBar';
 import DashboardCard from '../components/DashboardCard';
 import ProgressRing from '../components/ProgressRing';
 import Icon from '../components/Icon';
+import SimpleBottomSheet from '../components/BottomSheet';
 import { mockTasks, mockGoals, mockExpenses, mockAppointments } from '../data/mockData';
 
 export default function Dashboard() {
   const router = useRouter();
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
   // Calculate dashboard metrics
   const pendingTasks = mockTasks.filter(task => !task.completed).length;
@@ -35,15 +37,32 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={commonStyles.safeArea}>
       <View style={commonStyles.header}>
-        <View>
-          <Text style={commonStyles.title}>Dashboard</Text>
-          <Text style={commonStyles.textSecondary}>
-            Bem-vindo de volta! 👋
-          </Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => {
+              console.log('Profile button pressed - navigating to profile');
+              router.push('/profile');
+            }}
+          >
+            <Image
+              source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' }}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <Text style={[commonStyles.title, { fontSize: 24, marginBottom: 4 }]}>Dashboard</Text>
+            <Text style={commonStyles.textSecondary}>
+              Bem-vindo de volta! 👋
+            </Text>
+          </View>
         </View>
         <TouchableOpacity
           style={styles.settingsButton}
-          onPress={() => console.log('Settings pressed')}
+          onPress={() => {
+            console.log('Settings button pressed - opening bottom sheet');
+            setIsSettingsVisible(true);
+          }}
         >
           <Icon name="settings-outline" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -201,11 +220,107 @@ export default function Dashboard() {
       </ScrollView>
 
       <BottomTabBar />
+
+      <SimpleBottomSheet
+        isVisible={isSettingsVisible}
+        onClose={() => setIsSettingsVisible(false)}
+      >
+        <View style={styles.settingsContent}>
+          <Text style={[commonStyles.subtitle, { marginBottom: 24 }]}>Configurações</Text>
+          
+          <View style={styles.settingsSection}>
+            <Text style={[commonStyles.text, { fontWeight: '600', marginBottom: 16 }]}>
+              Preferências do Sistema
+            </Text>
+            
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={() => console.log('Dark theme toggle pressed')}
+            >
+              <View style={styles.settingLeft}>
+                <Icon name="moon-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Tema Escuro</Text>
+              </View>
+              <Icon name="toggle-outline" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={() => console.log('Language setting pressed')}
+            >
+              <View style={styles.settingLeft}>
+                <Icon name="language-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Idioma</Text>
+              </View>
+              <View style={styles.settingRight}>
+                <Text style={commonStyles.textSecondary}>Português</Text>
+                <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <Icon name="notifications-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Notificações</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.settingsSection}>
+            <Text style={[commonStyles.text, { fontWeight: '600', marginBottom: 16 }]}>
+              Configurações do App
+            </Text>
+            
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <Icon name="sync-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Sincronização</Text>
+              </View>
+              <Icon name="toggle-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <Icon name="shield-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Privacidade</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <Icon name="help-circle-outline" size={20} color={colors.text} />
+                <Text style={[commonStyles.text, { marginLeft: 12 }]}>Ajuda & Suporte</Text>
+              </View>
+              <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SimpleBottomSheet>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  profileButton: {
+    marginRight: 12,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  headerText: {
+    flex: 1,
+  },
   settingsButton: {
     padding: 8,
     borderRadius: 8,
@@ -277,5 +392,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.text,
     textAlign: 'center',
+  },
+  settingsContent: {
+    flex: 1,
+  },
+  settingsSection: {
+    marginBottom: 32,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  settingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
