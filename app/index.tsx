@@ -30,6 +30,17 @@ export default function Dashboard() {
     .filter(apt => apt.date > new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
 
+  const todayAppointments = mockAppointments.filter(apt => {
+    const today = new Date();
+    const aptDate = apt.date;
+    return aptDate.toDateString() === today.toDateString();
+  });
+
+  const upcomingAppointments = mockAppointments
+    .filter(apt => apt.date > new Date())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, 3);
+
   const goalProgress = mockGoals.length > 0 
     ? mockGoals.reduce((sum, goal) => sum + (goal.currentValue / goal.targetValue), 0) / mockGoals.length 
     : 0;
@@ -87,6 +98,47 @@ export default function Dashboard() {
           />
         </View>
 
+        {/* Today's Appointments */}
+        {todayAppointments.length > 0 && (
+          <View style={commonStyles.card}>
+            <View style={commonStyles.spaceBetween}>
+              <Text style={commonStyles.subtitle}>Compromissos de Hoje</Text>
+              <TouchableOpacity onPress={() => router.push('/agenda')}>
+                <Text style={[commonStyles.textSecondary, { color: colors.primary }]}>
+                  Ver agenda
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            {todayAppointments.map((appointment) => (
+              <View key={appointment.id} style={styles.appointmentCard}>
+                <View style={styles.appointmentIcon}>
+                  <Icon name="calendar" size={20} color={colors.primary} />
+                </View>
+                <View style={styles.appointmentInfo}>
+                  <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+                    {appointment.title}
+                  </Text>
+                  <Text style={commonStyles.textSecondary}>
+                    {appointment.date.toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })} • {appointment.duration}min
+                  </Text>
+                  {appointment.location && (
+                    <Text style={commonStyles.textSecondary}>
+                      📍 {appointment.location}
+                    </Text>
+                  )}
+                </View>
+                {appointment.reminder && (
+                  <Icon name="notifications" size={16} color={colors.warning} />
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Goals Progress */}
         <View style={commonStyles.card}>
           <View style={commonStyles.spaceBetween}>
@@ -115,32 +167,51 @@ export default function Dashboard() {
           </View>
         </View>
 
-        {/* Next Appointment */}
-        {nextAppointment && (
+        {/* Upcoming Appointments */}
+        {upcomingAppointments.length > 0 && (
           <View style={commonStyles.card}>
-            <Text style={commonStyles.subtitle}>Próximo Compromisso</Text>
-            <View style={styles.appointmentCard}>
-              <View style={styles.appointmentIcon}>
-                <Icon name="calendar" size={20} color={colors.primary} />
-              </View>
-              <View style={styles.appointmentInfo}>
-                <Text style={[commonStyles.text, { fontWeight: '600' }]}>
-                  {nextAppointment.title}
+            <View style={commonStyles.spaceBetween}>
+              <Text style={commonStyles.subtitle}>Próximos Compromissos</Text>
+              <TouchableOpacity onPress={() => router.push('/agenda')}>
+                <Text style={[commonStyles.textSecondary, { color: colors.primary }]}>
+                  Ver agenda
                 </Text>
-                <Text style={commonStyles.textSecondary}>
-                  {nextAppointment.date.toLocaleDateString('pt-BR')} às{' '}
-                  {nextAppointment.date.toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
-                {nextAppointment.location && (
-                  <Text style={commonStyles.textSecondary}>
-                    📍 {nextAppointment.location}
-                  </Text>
-                )}
-              </View>
+              </TouchableOpacity>
             </View>
+            
+            {upcomingAppointments.map((appointment) => (
+              <TouchableOpacity
+                key={appointment.id}
+                style={styles.upcomingAppointment}
+                onPress={() => router.push('/agenda')}
+              >
+                <View style={styles.appointmentDate}>
+                  <Text style={styles.dateDay}>
+                    {appointment.date.getDate()}
+                  </Text>
+                  <Text style={styles.dateMonth}>
+                    {appointment.date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.appointmentDetails}>
+                  <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+                    {appointment.title}
+                  </Text>
+                  <Text style={commonStyles.textSecondary}>
+                    {appointment.date.toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })} • {appointment.duration}min
+                  </Text>
+                  {appointment.location && (
+                    <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
+                      📍 {appointment.location}
+                    </Text>
+                  )}
+                </View>
+                <Icon name="chevron-forward" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            ))}
           </View>
         )}
 
@@ -194,10 +265,10 @@ export default function Dashboard() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.quickAction}
-              onPress={() => router.push('/tasks')}
+              onPress={() => router.push('/agenda')}
             >
-              <Icon name="add-circle" size={24} color={colors.success} />
-              <Text style={styles.quickActionText}>Nova Tarefa</Text>
+              <Icon name="calendar" size={24} color={colors.success} />
+              <Text style={styles.quickActionText}>Nova Agenda</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.quickAction}
@@ -345,6 +416,8 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: colors.backgroundAlt,
     borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
   },
   appointmentIcon: {
     width: 40,
@@ -356,6 +429,31 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   appointmentInfo: {
+    flex: 1,
+  },
+  upcomingAppointment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  appointmentDate: {
+    alignItems: 'center',
+    marginRight: 16,
+    minWidth: 50,
+  },
+  dateDay: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  dateMonth: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  appointmentDetails: {
     flex: 1,
   },
   taskItem: {

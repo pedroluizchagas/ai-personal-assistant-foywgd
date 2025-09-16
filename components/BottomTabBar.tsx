@@ -8,9 +8,9 @@ import { colors, commonStyles } from '../styles/commonStyles';
 const tabs = [
   { name: 'dashboard', icon: 'home-outline', activeIcon: 'home', route: '/' },
   { name: 'chat', icon: 'chatbubble-outline', activeIcon: 'chatbubble', route: '/chat' },
+  { name: 'agenda', icon: 'calendar-outline', activeIcon: 'calendar', route: '/agenda' },
   { name: 'finances', icon: 'card-outline', activeIcon: 'card', route: '/finances' },
   { name: 'tasks', icon: 'checkbox-outline', activeIcon: 'checkbox', route: '/tasks' },
-  { name: 'notes', icon: 'document-text-outline', activeIcon: 'document-text', route: '/notes' },
 ];
 
 export default function BottomTabBar() {
